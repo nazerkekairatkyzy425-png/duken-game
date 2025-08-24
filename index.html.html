@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <title>Дүкен ойыны</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      text-align: center;
+      padding: 30px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 450px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 80%;
+    }
+    button {
+      background: #4caf50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    #score, #timer, #level {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🛒 Дүкен ойыны</h2>
+    <p id="item"></p>
+    <p id="price"></p>
+    <p id="discount"></p>
+    <p id="vat"></p>
+
+    <p>Соңғы төлемді енгізіңіз:</p>
+    <input type="number" id="answer" placeholder="Соманы енгізіңіз">
+    <br>
+    <button onclick="checkAnswer()">Тексеру</button>
+    <button onclick="newGame()">Жаңа ойын</button>
+
+    <p id="result"></p>
+    <p id="score">Ұпай: 0</p>
+    <p id="level">Деңгей: 1</p>
+    <p id="timer">Уақыт: 60 с</p>
+  </div>
+
+  <script>
+    let current;
+    let score = 0;
+    let level = 1;
+    let timeLeft = 60;
+    let timer;
+
+    const items = [
+      {name: "Телефон", price: 100000, discount: 10},
+      {name: "Ноутбук", price: 250000, discount: 15},
+      {name: "Құлаққап", price: 20000, discount: 5},
+      {name: "Сөмке", price: 15000, discount: 20},
+      {name: "Спорт аяқ-киім", price: 50000, discount: 12},
+      {name: "Сағат", price: 30000, discount: 8},
+      {name: "Теледидар", price: 180000, discount: 18}
+    ];
+
+    function newGame() {
+      current = [];
+      // деңгейге қарай есеп күрделене түседі
+      let itemCount = level < 3 ? 1 : (level < 5 ? 2 : 3); // деңгей жоғарылаған сайын бірнеше тауар қосылады
+      for (let i = 0; i < itemCount; i++) {
+        current.push(items[Math.floor(Math.random() * items.length)]);
+      }
+
+      let itemText = current.map((it, idx) => (idx+1) + ". " + it.name + " — " + it.price.toLocaleString() + " ₸ (жеңілдік: " + it.discount + "%)").join("<br>");
+      document.getElementById("item").innerHTML = "<b>Тауарлар:</b><br>" + itemText;
+      document.getElementById("price").innerHTML = "";
+      document.getElementById("discount").innerHTML = "";
+      document.getElementById("vat").innerHTML = "<b>ҚҚС:</b> " + (level >= 4 ? "15%" : "12%") + " (деңгейге байланысты)";
+      document.getElementById("answer").value = "";
+      document.getElementById("result").innerHTML = "";
+      resetTimer();
+    }
+
+    function checkAnswer() {
+      let total = 0;
+      let vatRate = (level >= 4 ? 0.15 : 0.12);
+
+      current.forEach(it => {
+        let discount = it.price * (it.discount / 100);
+        let afterDiscount = it.price - discount;
+        let vat = afterDiscount * vatRate;
+        total += afterDiscount + vat;
+      });
+
+      let userAnswer = document.getElementById("answer").value;
+      let result = document.getElementById("result");
+
+      if (Math.abs(userAnswer - total) < 1) {
+        result.innerHTML = "✅ Жарайсың! Дұрыс жауап: " + total.toFixed(2) + " ₸";
+        result.style.color = "green";
+        score++;
+      } else {
+        result.innerHTML = "❌ Қате. Дұрыс жауап: " + total.toFixed(2) + " ₸";
+        result.style.color = "red";
+      }
+      document.getElementById("score").innerHTML = "Ұпай: " + score;
+
+      checkLevel();
+    }
+
+    function checkLevel() {
+      if (score > 0 && score % 5 === 0) {
+        level++;
+        document.getElementById("level").innerHTML = "Деңгей: " + level;
+        alert("🎉 Құттықтаймыз! Сіз " + level + "-деңгейге өттіңіз! Енді есеп қиындайды.");
+      }
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          document.getElementById("timer").innerHTML = "Уақыт: " + timeLeft + " с";
+        } else {
+          clearInterval(timer);
+          document.getElementById("result").innerHTML = "⏰ Уақыт біті!";
+          document.getElementById("result").style.color = "orange";
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timer);
+      timeLeft = 60;
+      document.getElementById("timer").innerHTML = "Уақыт: 60 с";
+      startTimer();
+    }
+
+    // Ойын басталғанда автоматты түрде жүктеу
+    window.onload = newGame;
+  </script>
+</body>
+</html>
